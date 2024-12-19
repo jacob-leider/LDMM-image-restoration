@@ -51,3 +51,60 @@ def patch_set(image, patch_size, index_set):
     rows, cols = index_set[:, 0], index_set[:, 1]
     patch_size = patches[rows, cols]
     return patch_size.reshape(patch_size.shape[0], -1)
+
+
+def p_star_p(m, n, patch_width, overlap):
+  """
+  Compute the matrix P^*P, where P is the patch-set operator and P^* is the
+  adjoint operator for P.
+
+  Args:
+      m (int)
+      n (int)
+      patch_width (int)
+      overlap (int)
+
+  Returns:
+      numpy.ndarray: The matrix P^*P.
+  """
+  pstarp = numpy.zeros((m, n))
+  stride = patch_width - overlap
+  for i in range(0, m - patch_width + 1, stride):
+    for j in range(0, n - patch_width + 1, stride):
+      pstarp[i:i+patch_width, j:j+patch_width] += 1
+  return pstarp
+
+
+def apply_p_star_adjoint(patches, patch_size, image_shape, index_set):
+    """
+    Apply the adjoint operator (P^*) to map from the patch space to the image.
+    
+    Args:
+        patches (numpy.ndarray): A 2D Array of shape (num_patches, patch_size^2),
+                                 representing the patch space data (e.g., residuals or updates).
+        patch_size (int): Size of the square patches (patch_size x patch_size).
+        image_shape (tuple): Shape of the original image (m, n).
+        index_set (numpy.ndarray): A 2D array of shape (num_patches, 2), where each row contains
+                                   the (row, column) indices of the top-left corner of a patch.
+
+    Returns:
+        numpy.ndarray: Reconstructed 2D image of shape (m, n).
+    """
+    reconstructed_image = numpy.zeros(image_shape)
+
+    # Generate indices for each pixel within a patch
+    patch_indices = numpy.arange(patch_size)
+    row_offsets, col_offsets = numpy.meshgrid(patch_indices, patch_indices, indexing="ij")
+
+    # Map patch indices to the global image coordinates
+    global_rows = index_set[:, 0][:, numpy.newaxis, numpy.newaxis] + row_offsets
+    global_cols = index_set[:, 1][:, numpy.newaxis, numpy.newaxis] + col_offsets
+
+    # Flatten the indices for vectorized accumulation
+    flat_rows = global_rows.ravel()
+    flat_cols = global_cols.ravel()
+    flat_patches = patches.ravel()
+
+    # Accumulate patch contributions into the reconstructed image
+    numpy.add.at(reconstructed_image, (flat_rows, flat_cols), flat_patches)
+    return reconstructed_image
