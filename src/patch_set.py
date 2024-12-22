@@ -59,6 +59,33 @@ def uniform_index_set(m, n, patch_size, overlap):
     return indices
 
 
+def patch_set_operator(image: numpy.ndarray, 
+                       index_set: numpy.ndarray, 
+                       patch_size: tuple[int, int], 
+                       U: numpy.ndarray):
+  """
+  Applies the patch-set operator to the input image.
+  - Uses a circular boundary condition.
+
+  Args:
+    image (numpy.ndarray): The input image.
+  
+  Returns:
+    numpy.ndarray: The image after applying the patch-set operator.
+  """
+  try:
+    patch_width, patch_height = patch_size
+    d = patch_width * patch_height
+  except:
+    raise ValueError("patch_size must be a tuple of (width, height)")
+
+  idxx, idxy = index_set.T
+  patches = sliding_window_view(image, patch_size)
+  U[:] = patches[idxx, idxy].reshape((len(index_set), d))
+
+  return U
+
+
 def patch_set(image, patch_size, index_set):
     """
     Constructs a patch set from an image using the provided index set.
