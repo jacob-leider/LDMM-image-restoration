@@ -131,36 +131,42 @@ def p_star_p(m, n, patch_width, overlap):
   return pstarp
 
 
-def apply_p_star_adjoint(patches, patch_size, image_shape, index_set):
-    """
-    Apply the adjoint operator (P^*) to map from the patch space to the image.
-    
-    Args:
-        patches (numpy.ndarray): A 2D Array of shape (num_patches, patch_size^2),
-                                 representing the patch space data (e.g., residuals or updates).
-        patch_size (int): Size of the square patches (patch_size x patch_size).
-        image_shape (tuple): Shape of the original image (m, n).
-        index_set (numpy.ndarray): A 2D array of shape (num_patches, 2), where each row contains
-                                   the (row, column) indices of the top-left corner of a patch.
+def patch_set_adjoint_operator(U: numpy.ndarray,
+                               index_set: numpy.ndarray,
+                               patch_size: tuple[int, int],
+                               image: numpy.ndarray):
+  """
+  Applies the adjoint operator of the patch set operator determined by 
+  index_set. Patches are added to their positions in image.
 
-    Returns:
-        numpy.ndarray: Reconstructed 2D image of shape (m, n).
-    """
-    reconstructed_image = numpy.zeros(image_shape)
+  Args:
+    U (numpy.ndarray): An array of flattened patches. The first axis corresponds 
+    to the first axis of index_set.
+    index_set (numpy.ndarray): Set of indices for the patches. An index 
+    corresponds to a patch's top left corner.
+    patch_size (tuple[int, int]): Patch dimensions.
+    image (numpy.ndarray): Where the result of this operation will be stored. 
+    Previous contents will be deleted.
+  
+  Returns:
+    image (numpy.ndarray): The result of the patch set operator on U.
+  """
+  # Zero out the image.
+  image[:] = 0
 
-    # Generate indices for each pixel within a patch
-    patch_indices = numpy.arange(patch_size)
-    row_offsets, col_offsets = numpy.meshgrid(patch_indices, patch_indices, indexing="ij")
+  # Generate indices for each pixel within a patch
+  patch_indices_x = np.arange(patch_size[0])
+  patch_indices_y = np.arange(patch_size[1])
 
-    # Map patch indices to the global image coordinates
-    global_rows = index_set[:, 0][:, numpy.newaxis, numpy.newaxis] + row_offsets
-    global_cols = index_set[:, 1][:, numpy.newaxis, numpy.newaxis] + col_offsets
+  row_offsets, col_offsets = np.meshgrid(patch_indices_x,
+                                         patch_indices_y,
+                                         indexing="ij")
 
-    # Flatten the indices for vectorized accumulation
-    flat_rows = global_rows.ravel()
-    flat_cols = global_cols.ravel()
-    flat_patches = patches.ravel()
+  # Map patch indices to the global image coordinates
+  global_rows = index_set[:, 0][:, np.newaxis, np.newaxis] + row_offsets
+  global_cols = index_set[:, 1][:, np.newaxis, np.newaxis] + col_offsets
 
-    # Accumulate patch contributions into the reconstructed image
-    numpy.add.at(reconstructed_image, (flat_rows, flat_cols), flat_patches)
-    return reconstructed_image
+  # Accumulate patch contributions into the reconstructed image
+  np.add.at(image,
+            (global_rows.ravel(), global_cols.ravel()), 
+            U.ravel())
