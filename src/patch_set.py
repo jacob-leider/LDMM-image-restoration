@@ -1,6 +1,35 @@
 import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
+def patch_set_contribution_mask(index_set: numpy.ndarray,
+                                patch_size: tuple[int, int],
+                                image_size: tuple[int, int]):
+  """
+  Constructs a map of "patch-density" given a patch set determined by index_set
+  and patch_size.  An index in the output contains the number of patches in the
+  given patch set by which it is covered.  This is also the result of 
+  patch_set_adjoint_operator on a matrix of ones.
+
+  Note: Some entries may be zero, so zero-entries should be set to one before
+  taking the result's reciprocal.
+
+  Args:
+    index_set (numpy.ndarray): Set of indices for the patches. An index 
+    corresponds to a patch's top left corner.
+    patch_size (tuple[int, int]): Patch dimensions.
+    image_size (tuple[int, int]): Image dimensions.
+  
+  Returns:
+    mask (numpy.ndarray): An integer valued array of dimensions image_shape.
+  """
+  mask = numpy.zeros(image_size)
+  for idx in index_set:
+    mask[idx[0]:idx[0] + patch_size[0], 
+         idx[1]:idx[1] + patch_size[1]] += 1
+  
+  return mask
+
+
 def uniform_index_set(m, n, patch_size, overlap):
     """
     Generates a uniform index set for extracting patches from an image.
