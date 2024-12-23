@@ -122,7 +122,9 @@ def LDMM_debug(y, omega,
                     slice(stride, stride + y.shape[1]))
 
     # Precompute (P^*P)^{-1}
-    p_star_p_inv = p_star_p(m, n, patch_size, overlap)
+    p_star_p_inv = patch_set_contribution_mask(index_set, 
+                                               (patch_size, patch_size), 
+                                               y_padded.shape)
     p_star_p_inv[p_star_p_inv == 0] = 1
     p_star_p_inv = 1 / p_star_p_inv
 
