@@ -155,18 +155,18 @@ def patch_set_adjoint_operator(U: numpy.ndarray,
   image[:] = 0
 
   # Generate indices for each pixel within a patch
-  patch_indices_x = np.arange(patch_size[0])
-  patch_indices_y = np.arange(patch_size[1])
+  patch_indices_x = numpy.arange(patch_size[0])
+  patch_indices_y = numpy.arange(patch_size[1])
 
-  row_offsets, col_offsets = np.meshgrid(patch_indices_x,
+  row_offsets, col_offsets = numpy.meshgrid(patch_indices_x,
                                          patch_indices_y,
                                          indexing="ij")
 
   # Map patch indices to the global image coordinates
-  global_rows = index_set[:, 0][:, np.newaxis, np.newaxis] + row_offsets
-  global_cols = index_set[:, 1][:, np.newaxis, np.newaxis] + col_offsets
+  global_rows = index_set[:, 0][:, numpy.newaxis, numpy.newaxis] + row_offsets
+  global_cols = index_set[:, 1][:, numpy.newaxis, numpy.newaxis] + col_offsets
 
   # Accumulate patch contributions into the reconstructed image
-  np.add.at(image,
+  numpy.add.at(image,
             (global_rows.ravel(), global_cols.ravel()), 
             U.ravel())
