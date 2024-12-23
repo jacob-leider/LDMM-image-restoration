@@ -1,3 +1,8 @@
+import ldmm
+from ldmm.patch_set import *
+from ldmm.utils import *
+from ldmm.sample_generation import *
+from ldmm.weight_matrix_generation import *
 import numpy
 from zipfile import ZipFile
 import os
@@ -12,6 +17,8 @@ from PIL import Image
 from numpy.fft import fft2
 import os
 import time
+import shutil
+
 
 def LDMM_debug(y, omega,
          mu,
@@ -211,12 +218,9 @@ def LDMM_debug(y, omega,
           #              (P^*P)^(-1)(P^*(U + d^n)),   x ∉ Ω                      #
           ########################################################################
           t1 = time.time()
-          P_star_residual = apply_p_star_adjoint(
-              U + d_n,
-              patch_size=patch_size,
-              image_shape=(m, n),
-              index_set=index_set)
-          f_n = P_star_residual * p_star_p_inv
+
+          patch_set_adjoint_operator(U + d_n, index_set, (patch_size, patch_size), f_n)
+          f_n = f_n * p_star_p_inv
           f_n[omega == 1] = y_padded[omega == 1]
 
           # Update d_n
@@ -309,7 +313,7 @@ def LDMM_debug(y, omega,
 
     if download_results:
       # Compress and download stats.
-      shutil.make_archive('~/', 'zip', '/~') # TODO
+      shutil.make_archive('~/ldmm_results', 'zip', './ldmm_results') # TODO
 
     return f_n, psnrs
 
@@ -441,12 +445,9 @@ def LDMM(y, omega,
           # f^{n+1}(x) = f(x),                        x ∈ Ω,                     #
           #              (P^*P)^(-1)(P^*(U + d^n)),   x ∉ Ω                      #
           ########################################################################
-          P_star_residual = apply_p_star_adjoint(
-              U + d_n,
-              patch_size=patch_size,
-              image_shape=(m, n),
-              index_set=index_set)
-          f_n = P_star_residual * p_star_p_inv
+
+          patch_set_adjoint_operator(U + d_n, index_set, (patch_size, patch_size), f_n)
+          f_n = f_n * p_star_p_inv
           f_n[omega == 1] = y_padded[omega == 1]
 
           # Update d_n
