@@ -86,51 +86,6 @@ def patch_set_operator(image: numpy.ndarray,
   return U
 
 
-def patch_set(image, patch_size, index_set):
-    """
-    Constructs a patch set from an image using the provided index set.
-
-    This function extracts patches from the input image based on a sliding window view
-    and the given index set, which specifies the top-left corners of each patch.
-
-    Args:
-        image (numpy.ndarray): Input 2D image from which patches will be extracted.
-        patch_size (int): Size of the square patches (patch_size x patch_size).
-        index_set (numpy.ndarray): A 2D array of shape (num_patches, 2), where each row
-            contains the (row, column) indices of the top-left corner of a patch.
-
-    Returns:
-        numpy.ndarray: A 2D array of shape (num_patches, patch_size^2)
-        where each slice along the first dimension represents a flatten patch.
-    """
-    patches = sliding_window_view(image, (patch_size, patch_size))
-    rows, cols = index_set[:, 0], index_set[:, 1]
-    patch_size = patches[rows, cols]
-    return patch_size.reshape(patch_size.shape[0], -1)
-
-
-def p_star_p(m, n, patch_width, overlap):
-  """
-  Compute the matrix P^*P, where P is the patch-set operator and P^* is the
-  adjoint operator for P.
-
-  Args:
-      m (int)
-      n (int)
-      patch_width (int)
-      overlap (int)
-
-  Returns:
-      numpy.ndarray: The matrix P^*P.
-  """
-  pstarp = numpy.zeros((m, n))
-  stride = patch_width - overlap
-  for i in range(0, m - patch_width + 1, stride):
-    for j in range(0, n - patch_width + 1, stride):
-      pstarp[i:i+patch_width, j:j+patch_width] += 1
-  return pstarp
-
-
 def patch_set_adjoint_operator(U: numpy.ndarray,
                                index_set: numpy.ndarray,
                                patch_size: tuple[int, int],
