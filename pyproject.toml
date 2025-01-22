@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ldmm"
 description = "LDMM image processing"
 authors = [
-    {name = "Example Author", email = "author@example.com"}
+    {name = "Jacob Leider", email = "jhl141@case.com"}
 ]
 version = "0.0.1"
 readme = "README.md"
